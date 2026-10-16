@@ -1,0 +1,66 @@
+// Schema do DevVoluntário - Parte 1
+// PostgreSQL (produção e desenvolvimento). Ajuste DATABASE_URL no .env.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// role:   'ADMIN' | 'EMPRESA' | 'TRABALHADOR'
+// Os valores permitidos são validados na aplicação (Zod + constantes em src/config/roles.js).
+// Usamos String em vez de enum para manter compatibilidade total com SQLite.
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  password    String // hash Bcrypt
+  role        String   @default("TRABALHADOR")
+  githubUrl   String?
+  linkedinUrl String?
+  bio         String?
+  createdAt   DateTime @default(now())
+
+  jobs         Job[]         @relation("CompanyJobs")
+  applications Application[] @relation("CandidateApplications")
+
+  @@map("users")
+}
+
+// status: 'ABERTO' | 'ENCERRADO'
+model Job {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  vacancies   Int // total de vagas
+  status      String   @default("ABERTO")
+  companyId   Int
+  createdAt   DateTime @default(now())
+
+  company      User          @relation("CompanyJobs", fields: [companyId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([companyId])
+  @@map("jobs")
+}
+
+// status: 'PENDENTE' | 'ACEITO' | 'RECUSADO'
+// ATENÇÃO: de propósito NÃO existe @@unique([jobId, candidateId]).
+// O mesmo candidato pode enviar várias candidaturas à mesma vaga (fins de demonstração).
+model Application {
+  id          Int      @id @default(autoincrement())
+  jobId       Int
+  candidateId Int
+  status      String   @default("PENDENTE")
+  createdAt   DateTime @default(now())
+
+  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate User @relation("CandidateApplications", fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([candidateId])
+  @@map("applications")
+}
