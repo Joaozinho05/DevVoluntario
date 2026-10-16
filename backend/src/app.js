@@ -7,6 +7,9 @@ const routes = require('./routes');
 
 const app = express();
 
+// Atrás do proxy do Render/Heroku/etc., o IP real vem em X-Forwarded-For (necessário para o rate limit).
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(corsMiddleware);
 app.use(globalRateLimiter);

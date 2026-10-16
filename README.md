@@ -7,7 +7,7 @@ Plataforma que conecta desenvolvedores voluntários a empresas e ONGs que precis
 
 ## Como rodar (4 passos)
 
-Requisitos: Node.js 18.18+ e npm. Abra dois terminais.
+Requisitos: Node.js 18.18+, npm e um banco PostgreSQL (local ou gratuito no Neon). Abra dois terminais.
 
 **Terminal 1: API**
 
@@ -15,8 +15,8 @@ Requisitos: Node.js 18.18+ e npm. Abra dois terminais.
 cd backend
 npm install
 cp .env.example .env            # no Windows (cmd): copy .env.example .env
-# edite o .env e troque JWT_SECRET por qualquer texto longo
-npx prisma migrate dev --name init
+# edite o .env: DATABASE_URL (Postgres) e JWT_SECRET (texto longo)
+npx prisma migrate deploy
 npm run prisma:seed
 npm run dev                     # API em http://localhost:3333
 ```
@@ -125,6 +125,13 @@ Mudanças em relação à Parte 1: as rotas de demonstração `/rbac-demo/*` e a
 
 ## Observações
 
-- **PostgreSQL**: a troca é a mesma da Parte 1 (provider e `DATABASE_URL`). A busca já usa `mode: 'insensitive'` automaticamente quando a URL começa com `postgres`.
+- **PostgreSQL**: o projeto usa PostgreSQL. A busca usa `mode: 'insensitive'` automaticamente quando a URL começa com `postgres`.
 - **Atualização em tempo real**: não há WebSocket; a empresa usa o botão **Atualizar** para ver novas candidaturas.
 - **Validado neste ambiente**: a sintaxe do back-end e a lógica do limite de vagas (com repositórios simulados: 1/2, 2/2 encerrando, 3ª tentativa com erro 400). Os pacotes não puderam ser instalados aqui (sem rede), então o fluxo completo com banco e a interface React devem ser conferidos na sua máquina com o roteiro acima.
+
+## Deploy
+
+1. **Banco**: crie um PostgreSQL (Neon ou Render) e copie a connection string.
+2. **API (Render, Web Service)**: Root Directory `backend`; Build `npm install && npm run build`; Start `npm start`. Variáveis: `DATABASE_URL`, `JWT_SECRET` (`openssl rand -hex 32`), `NODE_ENV=production`, `CORS_ORIGIN` (URL do front, sem barra final).
+3. **Front-end (Vercel/Netlify)**: Root Directory `frontend`; Build `npm run build`; Output `dist`; variável `VITE_API_URL` = URL da API (sem barra final). `vercel.json` e `public/_redirects` já tratam as rotas do React Router.
+4. **Dados iniciais (opcional)**: com `DATABASE_URL` de produção no `.env` local, rode `npm run prisma:seed` em `backend/`. As senhas do seed são de demonstração; troque-as se o site for público.

@@ -1,13 +1,12 @@
 // Schema do DevVoluntário - Parte 1
-// SQLite local por padrão. Para PostgreSQL, troque o provider para "postgresql"
-// e ajuste DATABASE_URL (veja o README).
+// PostgreSQL (produção e desenvolvimento). Ajuste DATABASE_URL no .env.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
