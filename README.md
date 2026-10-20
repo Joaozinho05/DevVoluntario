@@ -2,6 +2,14 @@
 
 Plataforma que conecta desenvolvedores voluntários a empresas e ONGs que precisam de tecnologia (desafio LAB365/SENAI).
 
+## 🚀 Deploy online
+
+**Aplicação:** https://devvoluntario-frontend.onrender.com
+
+**API:** https://devvoluntario.onrender.com
+
+A aplicação está disponível online através do Render.
+
 - **Parte 1**: arquitetura em camadas, Prisma, JWT, Bcrypt, Zod, RBAC e base do front-end.
 - **Parte 2** (esta versão): regra de limite de vagas, módulos de cargos, candidaturas e administração, as 3 telas do sistema e o seed de demonstração.
 
@@ -14,11 +22,11 @@ Requisitos: Node.js 18.18+, npm e um banco PostgreSQL (local ou gratuito no Neon
 ```bash
 cd backend
 npm install
-cp .env.example .env            # no Windows (cmd): copy .env.example .env
+cp .env.example .env             # no Windows (cmd): copy .env.example .env
 # edite o .env: DATABASE_URL (Postgres) e JWT_SECRET (texto longo)
 npx prisma migrate deploy
 npm run prisma:seed
-npm run dev                     # API em http://localhost:3333
+npm run dev                      # API em http://localhost:3333
 ```
 
 **Terminal 2: Front-end**
@@ -27,7 +35,7 @@ npm run dev                     # API em http://localhost:3333
 cd frontend
 npm install
 cp .env.example .env
-npm run dev                     # App em http://localhost:5173
+npm run dev                      # App em http://localhost:5173
 ```
 
 > Já tinha rodado a Parte 1? O `schema.prisma` não mudou. Para começar com o banco limpo e as novas contas, rode `npm run demo:reset` dentro de `backend/`.
@@ -53,15 +61,16 @@ Use duas janelas do navegador (uma normal e uma anônima, para manter sessões s
 5. **Janela A**: clique em **Candidatar-me** de novo. O mesmo candidato pode se candidatar mais de uma vez (regra de demonstração). A barra chega a **2 / 2**, o cargo vira **Encerrado** e o botão muda para **Vagas Esgotadas**, desabilitado.
 6. Para provar o bloqueio no back-end, mesmo sem usar o botão:
 
-   ```bash
-   # pegue um token (campo "token" da resposta)
-   curl -X POST http://localhost:3333/auth/login -H "Content-Type: application/json" \
-     -d '{"email":"trabalhador@dev.com","password":"dev123"}'
+```bash
+# pegue um token (campo "token" da resposta)
+curl -X POST http://localhost:3333/auth/login -H "Content-Type: application/json" \
+  -d '{"email":"trabalhador@dev.com","password":"dev123"}'
 
-   # tente se candidatar ao cargo 1 já lotado
-   curl -X POST http://localhost:3333/jobs/1/apply -H "Authorization: Bearer TOKEN"
-   # -> 400 {"status":"error","message":"Limite de vagas atingido! Candidaturas encerradas."}
-   ```
+# tente se candidatar ao cargo 1 já lotado
+curl -X POST http://localhost:3333/jobs/1/apply -H "Authorization: Bearer TOKEN"
+# -> 400 {"status":"error","message":"Limite de vagas atingido! Candidaturas encerradas."}
+```
+
 7. **Janela B**: publique um novo cargo no formulário (título, descrição, vagas) e veja-o aparecer.
 8. Entre como `admin@devvoluntario.com`: nas abas **Usuários** e **Cargos**, clique em **Excluir**, confirme no diálogo e veja o item sumir.
 9. Para repetir a demo do zero: `npm run demo:reset` em `backend/`.
@@ -107,15 +116,16 @@ Erros seguem o formato `{ "status": "error", "message": "...", "errors": [...] }
 
 ## Estrutura (novidades da Parte 2)
 
-```
+```text
 backend/
-├── prisma/seed.js                        # Contas e cargo da demonstração
+├── prisma/seed.js
 └── src/
     ├── routes/        jobRoutes, applicationRoutes, userRoutes, adminRoutes
     ├── controllers/   job, application, user, admin
     ├── services/      jobService, applicationService (regra do limite), userService, adminService
     ├── repositories/  jobRepository, applicationRepository, userRepository
     └── validators/    common, jobValidators, userValidators
+
 frontend/src/
 ├── pages/        DashboardEmpresa, DashboardTrabalhador, DashboardAdmin
 └── components/   ProgressBar, StatusBadge, ConfirmDialog, ProfileEditor
@@ -127,11 +137,69 @@ Mudanças em relação à Parte 1: as rotas de demonstração `/rbac-demo/*` e a
 
 - **PostgreSQL**: o projeto usa PostgreSQL. A busca usa `mode: 'insensitive'` automaticamente quando a URL começa com `postgres`.
 - **Atualização em tempo real**: não há WebSocket; a empresa usa o botão **Atualizar** para ver novas candidaturas.
-- **Validado neste ambiente**: a sintaxe do back-end e a lógica do limite de vagas (com repositórios simulados: 1/2, 2/2 encerrando, 3ª tentativa com erro 400). Os pacotes não puderam ser instalados aqui (sem rede), então o fluxo completo com banco e a interface React devem ser conferidos na sua máquina com o roteiro acima.
+- **Deploy**: o projeto está hospedado no Render, com frontend e backend publicados separadamente.
+- **Validado neste ambiente**: a sintaxe do back-end e a lógica do limite de vagas (com repositórios simulados: 1/2, 2/2 encerrando, 3ª tentativa com erro 400). O fluxo completo com banco e interface React foi validado após o deploy.
 
 ## Deploy
 
-1. **Banco**: crie um PostgreSQL (Neon ou Render) e copie a connection string.
-2. **API (Render, Web Service)**: Root Directory `backend`; Build `npm install && npm run build`; Start `npm start`. Variáveis: `DATABASE_URL`, `JWT_SECRET` (`openssl rand -hex 32`), `NODE_ENV=production`, `CORS_ORIGIN` (URL do front, sem barra final).
-3. **Front-end (Vercel/Netlify)**: Root Directory `frontend`; Build `npm run build`; Output `dist`; variável `VITE_API_URL` = URL da API (sem barra final). `vercel.json` e `public/_redirects` já tratam as rotas do React Router.
-4. **Dados iniciais (opcional)**: com `DATABASE_URL` de produção no `.env` local, rode `npm run prisma:seed` em `backend/`. As senhas do seed são de demonstração; troque-as se o site for público.
+### Banco
+
+O projeto utiliza PostgreSQL. Pode ser utilizado um banco PostgreSQL local, Neon ou Render.
+
+### API — Render
+
+Configuração utilizada:
+
+- **Tipo:** Web Service
+- **Root Directory:** `backend`
+- **Build Command:** `npm install && npm run build`
+- **Start Command:** `npm start`
+
+Variáveis de ambiente:
+
+```text
+DATABASE_URL
+JWT_SECRET
+NODE_ENV=production
+CORS_ORIGIN=https://devvoluntario-frontend.onrender.com
+```
+
+API em produção:
+
+```text
+https://devvoluntario.onrender.com
+```
+
+### Front-end — Render
+
+Configuração utilizada:
+
+- **Tipo:** Static Site
+- **Root Directory:** `frontend`
+- **Build Command:** `npm install && npm run build`
+- **Publish Directory:** `dist`
+
+Variável de ambiente:
+
+```text
+VITE_API_URL=https://devvoluntario.onrender.com
+```
+
+Front-end em produção:
+
+```text
+https://devvoluntario-frontend.onrender.com
+```
+
+As configurações de deploy permitem que o frontend React se comunique com a API publicada no Render.
+
+### Dados iniciais
+
+Para criar os dados de demonstração em um ambiente local:
+
+```bash
+cd backend
+npm run prisma:seed
+```
+
+As senhas do seed são de demonstração. Caso o sistema seja disponibilizado publicamente para uso real, elas devem ser alteradas.
